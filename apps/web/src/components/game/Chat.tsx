@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '../../hooks/useSocket';
 import { useGameStore } from '../../stores/gameStore';
 
@@ -32,83 +31,64 @@ export function Chat({ roomId }: ChatProps) {
   };
 
   return (
-    <div className="card flex flex-col h-full lg:h-80">
+    <div className="flex flex-col h-full lg:h-80 w-full min-w-0 lg:bg-gray-800/50 lg:backdrop-blur-sm lg:rounded-2xl lg:p-6 lg:border lg:border-gray-700/50">
       {/* Header - hidden in mobile overlay mode */}
       <div className="hidden lg:flex items-center justify-between mb-3">
         <h2 className="text-lg font-bold">Chat</h2>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="text-gray-400 hover:text-white"
-        >
+        <button onClick={() => setIsOpen(!isOpen)} className="text-gray-400 hover:text-white">
           {isOpen ? '−' : '+'}
         </button>
       </div>
 
-      <AnimatePresence initial={false}>
-        {(isOpen || true) && ( // Always open - mobile uses overlay
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="flex-1 flex flex-col overflow-hidden min-h-0"
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto space-y-2 mb-3">
+          {messages.length === 0 ? (
+            <p className="text-gray-500 text-center text-sm py-4">No messages yet</p>
+          ) : (
+            messages.map((msg) => (
+              <div key={`${msg.timestamp}-${msg.playerId}`} className="text-sm">
+                <span className="font-semibold text-blue-400">{msg.displayName}:</span>{' '}
+                <span className="text-gray-300">{msg.message}</span>
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Quick chats */}
+        <div className="flex gap-1 mb-2">
+          {QUICK_CHATS.map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => handleQuickChat(emoji)}
+              className="text-lg hover:scale-125 transition-transform"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div className="flex gap-2 w-full min-w-0">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Type a message..."
+            className="input text-sm py-2 flex-1 min-w-0"
+            maxLength={100}
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim()}
+            className="btn btn-primary px-4 py-2 text-sm"
           >
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto space-y-2 mb-3">
-              {messages.length === 0 ? (
-                <p className="text-gray-500 text-center text-sm py-4">
-                  No messages yet
-                </p>
-              ) : (
-                messages.map((msg) => (
-                  <div
-                    key={`${msg.timestamp}-${msg.playerId}`}
-                    className="text-sm"
-                  >
-                    <span className="font-semibold text-purple-400">
-                      {msg.displayName}:
-                    </span>{' '}
-                    <span className="text-gray-300">{msg.message}</span>
-                  </div>
-                ))
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Quick chats */}
-            <div className="flex gap-1 mb-2">
-              {QUICK_CHATS.map((emoji) => (
-                <button
-                  key={emoji}
-                  onClick={() => handleQuickChat(emoji)}
-                  className="text-lg hover:scale-125 transition-transform"
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-
-            {/* Input */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Type a message..."
-                className="input text-sm py-2"
-                maxLength={100}
-              />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim()}
-                className="btn btn-primary px-4 py-2 text-sm"
-              >
-                Send
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            Send
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

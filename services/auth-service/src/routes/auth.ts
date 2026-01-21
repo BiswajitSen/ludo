@@ -127,15 +127,25 @@ authRouter.post('/guest', async (req: Request, res: Response) => {
 });
 
 // Google OAuth initiation
-authRouter.get(
-  '/google',
-  passport.authenticate('google', { scope: ['profile', 'email'], session: false })
-);
+authRouter.get('/google', (req: Request, res: Response, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return res.status(501).json({
+      error: 'Google OAuth not configured',
+      message: 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables',
+    });
+  }
+  passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
+});
 
 // Google OAuth callback
 authRouter.get(
   '/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+  (req: Request, res: Response, next) => {
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      return res.redirect('/?error=oauth_not_configured');
+    }
+    passport.authenticate('google', { session: false, failureRedirect: '/login' })(req, res, next);
+  },
   async (req: Request, res: Response) => {
     try {
       const user = req.user as any;

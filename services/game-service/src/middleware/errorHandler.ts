@@ -82,13 +82,7 @@ export function notFoundHandler(req: Request, res: Response, next: NextFunction)
 /**
  * Global error handler middleware
  */
-export function errorHandler(
-  err: Error,
-  req: Request,
-  res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _next: NextFunction
-) {
+export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction) {
   // Log the error
   if (err instanceof AppError && err.isOperational) {
     logger.warn(
@@ -113,9 +107,7 @@ export function errorHandler(
   // Determine status code and message
   const statusCode = err instanceof AppError ? err.statusCode : 500;
   const message =
-    err instanceof AppError && err.isOperational
-      ? err.message
-      : 'Internal server error';
+    err instanceof AppError && err.isOperational ? err.message : 'Internal server error';
 
   // Send response
   res.status(statusCode).json({

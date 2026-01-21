@@ -80,7 +80,6 @@ export function Dice({ value, canRoll, isMyTurn, onRoll }: DiceProps) {
   useEffect(() => {
     if (value !== null) {
       setPendingValue(value);
-      console.log('Server dice value received:', value);
     }
   }, [value]);
 
@@ -95,7 +94,6 @@ export function Dice({ value, canRoll, isMyTurn, onRoll }: DiceProps) {
       setIsRolling(false);
       setDisplayValue(pendingValue);
       setAnimationComplete(false);
-      console.log('Dice display updated to:', pendingValue);
     }
   }, [animationComplete, pendingValue]);
 
@@ -157,7 +155,9 @@ export function Dice({ value, canRoll, isMyTurn, onRoll }: DiceProps) {
           'transition-all duration-200',
           'bg-gradient-to-br from-white to-gray-100 border-4 border-gray-200',
           'shadow-[0_6px_0_0_#d1d5db,0_8px_20px_rgba(0,0,0,0.2)]',
-          canRoll && !isRolling && 'cursor-pointer hover:shadow-[0_4px_0_0_#d1d5db,0_6px_15px_rgba(0,0,0,0.2)] hover:translate-y-0.5 active:shadow-[0_2px_0_0_#d1d5db] active:translate-y-1',
+          canRoll &&
+            !isRolling &&
+            'cursor-pointer hover:shadow-[0_4px_0_0_#d1d5db,0_6px_15px_rgba(0,0,0,0.2)] hover:translate-y-0.5 active:shadow-[0_2px_0_0_#d1d5db] active:translate-y-1',
           isRolling && 'cursor-wait',
           !canRoll && !isMyTurn && !isRolling && 'opacity-60 cursor-default'
         )}

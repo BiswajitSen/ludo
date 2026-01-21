@@ -36,7 +36,9 @@ export function HomePage() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || ''}/api/auth/google`;
+    // OAuth requires direct navigation to auth service (can't use proxy)
+    const authServiceUrl = import.meta.env.VITE_AUTH_URL || 'http://localhost:3002';
+    window.location.href = `${authServiceUrl}/api/auth/google`;
   };
 
   if (isAuthenticated && user) {
@@ -53,17 +55,11 @@ export function HomePage() {
           <p className="text-gray-400 mb-8">{user.displayName}</p>
 
           <div className="space-y-4">
-            <button
-              onClick={() => navigate('/lobby')}
-              className="btn btn-primary w-full text-lg"
-            >
+            <button onClick={() => navigate('/lobby')} className="btn btn-primary w-full text-lg">
               Play Now
             </button>
 
-            <button
-              onClick={logout}
-              className="btn btn-secondary w-full"
-            >
+            <button onClick={logout} className="btn btn-secondary w-full">
               Logout
             </button>
           </div>
@@ -109,9 +105,7 @@ export function HomePage() {
         {/* Login Form */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
-              Display Name
-            </label>
+            <label className="block text-sm font-medium text-gray-400 mb-2">Display Name</label>
             <input
               type="text"
               value={displayName}
@@ -123,9 +117,7 @@ export function HomePage() {
             />
           </div>
 
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <button
             onClick={handleGuestLogin}

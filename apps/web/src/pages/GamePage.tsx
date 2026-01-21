@@ -30,17 +30,8 @@ export function GamePage() {
   const lastSeenMessageRef = useRef<number>(0);
   const hasInitializedChatRef = useRef(false);
 
-  const {
-    phase,
-    room,
-    gameState,
-    myPlayerId,
-    isMyTurn,
-    canRoll,
-    validMoves,
-    error,
-    messages,
-  } = useGameStore();
+  const { phase, room, gameState, myPlayerId, isMyTurn, canRoll, validMoves, error, messages } =
+    useGameStore();
 
   useEffect(() => {
     if (!hasInitializedChatRef.current) {
@@ -50,7 +41,8 @@ export function GamePage() {
     }
 
     if (showChat) {
-      lastSeenMessageRef.current = messages[messages.length - 1]?.timestamp ?? lastSeenMessageRef.current;
+      lastSeenMessageRef.current =
+        messages[messages.length - 1]?.timestamp ?? lastSeenMessageRef.current;
       setUnreadCount(0);
       return;
     }
@@ -61,8 +53,7 @@ export function GamePage() {
     if (lastMessage.timestamp <= lastSeenMessageRef.current) return;
 
     const newFromOthers = messages.filter(
-      (message) =>
-        message.timestamp > lastSeenMessageRef.current && message.playerId !== myPlayerId
+      (message) => message.timestamp > lastSeenMessageRef.current && message.playerId !== myPlayerId
     );
 
     if (newFromOthers.length > 0) {
@@ -233,10 +224,7 @@ export function GamePage() {
           <div className="flex-1 flex flex-col items-center justify-center min-h-0 gap-3">
             {/* Board container - fixed scale for predictable sizing */}
             <div className="flex items-center justify-center w-full">
-              <div
-                className="transform origin-center"
-                style={{ transform: 'scale(0.62)' }}
-              >
+              <div className="transform origin-center" style={{ transform: 'scale(0.62)' }}>
                 <LudoBoard
                   players={gameState?.players || []}
                   validMoves={validMoves}
@@ -260,69 +248,72 @@ export function GamePage() {
               <TurnIndicator isMyTurn={isMyTurn} canRoll={canRoll} validMoves={validMoves} />
             </div>
           </div>
-
-          {/* Chat toggle button */}
-          <button
-            onClick={() => setShowChat(!showChat)}
-            className="fixed w-11 h-11 bg-purple-600 rounded-full shadow-lg flex items-center justify-center text-white z-40 active:scale-95 transition-transform"
-            style={{
-              bottom: 'max(env(safe-area-inset-bottom, 16px), 16px)',
-              left: '16px',
-            }}
-            aria-label={
-              unreadCount > 0
-                ? `Open chat (${unreadCount} new message${unreadCount > 1 ? 's' : ''})`
-                : 'Open chat'
-            }
-          >
-            <MessageSquare className="w-5 h-5" aria-hidden="true" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-bold leading-[18px] text-white">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
-
-          {/* Chat overlay */}
-          <AnimatePresence>
-            {showChat && (
-              <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 25 }}
-                className="fixed inset-x-0 bottom-0 h-[60vh] bg-gray-900 rounded-t-2xl shadow-2xl z-50 flex flex-col pb-[env(safe-area-inset-bottom)]"
-              >
-                <div className="flex items-center justify-between p-4 border-b border-gray-800">
-                  <h3 className="font-bold">Chat</h3>
-                  <button
-                    onClick={() => setShowChat(false)}
-                    className="text-gray-400 hover:text-white"
-                    aria-label="Close chat"
-                  >
-                    <X className="w-5 h-5" aria-hidden="true" />
-                  </button>
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  <Chat roomId={roomId!} />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
+      </div>
+
+      {/* Mobile Chat - Outside main content to avoid transform stacking context issues */}
+      <div className="lg:hidden">
+        {/* Chat toggle button */}
+        <button
+          onClick={() => setShowChat(!showChat)}
+          className="fixed w-11 h-11 bg-gray-700 rounded-full shadow-lg flex items-center justify-center text-white z-[9998] active:scale-95 transition-transform"
+          style={{
+            bottom: 'max(env(safe-area-inset-bottom, 16px), 16px)',
+            left: '16px',
+          }}
+          aria-label={
+            unreadCount > 0
+              ? `Open chat (${unreadCount} new message${unreadCount > 1 ? 's' : ''})`
+              : 'Open chat'
+          }
+        >
+          <MessageSquare className="w-5 h-5" aria-hidden="true" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-bold leading-[18px] text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+
+        {/* Chat overlay */}
+        <AnimatePresence>
+          {showChat && (
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="fixed inset-x-0 bottom-0 h-[60vh] bg-gray-900 rounded-t-2xl shadow-2xl z-[9999] flex flex-col pb-[env(safe-area-inset-bottom)]"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-gray-800">
+                <h3 className="font-bold">Chat</h3>
+                <button
+                  onClick={() => setShowChat(false)}
+                  className="text-gray-400 hover:text-white"
+                  aria-label="Close chat"
+                >
+                  <X className="w-5 h-5" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="flex-1 min-h-0 px-4 py-2">
+                <Chat roomId={roomId!} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
 
 // Turn indicator component
-function TurnIndicator({ 
-  isMyTurn, 
-  canRoll, 
-  validMoves
-}: { 
-  isMyTurn: boolean; 
-  canRoll: boolean; 
+function TurnIndicator({
+  isMyTurn,
+  canRoll,
+  validMoves,
+}: {
+  isMyTurn: boolean;
+  canRoll: boolean;
   validMoves: number[];
 }) {
   if (!isMyTurn) return null;
@@ -340,23 +331,17 @@ function TurnIndicator({
           {canRoll ? (
             <>
               <Dices className="w-6 h-6 text-white animate-bounce" aria-hidden="true" />
-              <span className="text-white font-bold text-base md:text-lg">
-                Your Turn - Roll!
-              </span>
+              <span className="text-white font-bold text-base md:text-lg">Your Turn - Roll!</span>
             </>
           ) : validMoves.length > 0 ? (
             <>
               <MousePointerClick className="w-5 h-5 text-white" aria-hidden="true" />
-              <span className="text-white font-bold text-base md:text-lg">
-                Select a token
-              </span>
+              <span className="text-white font-bold text-base md:text-lg">Select a token</span>
             </>
           ) : (
             <>
               <Loader2 className="w-5 h-5 text-white animate-spin" aria-hidden="true" />
-              <span className="text-white font-medium text-sm md:text-base">
-                No valid moves...
-              </span>
+              <span className="text-white font-medium text-sm md:text-base">No valid moves...</span>
             </>
           )}
         </div>
@@ -407,9 +392,7 @@ function MobilePlayerCard({
               <span className="text-sm font-semibold text-white max-w-[80px] truncate">
                 {player.displayName}
               </span>
-              {isYou && (
-                <Crown className="w-3 h-3 text-yellow-300" aria-hidden="true" />
-              )}
+              {isYou && <Crown className="w-3 h-3 text-yellow-300" aria-hidden="true" />}
             </div>
             <div className="flex items-center gap-2 text-[11px] text-white/80">
               <span className="flex items-center gap-0.5">
