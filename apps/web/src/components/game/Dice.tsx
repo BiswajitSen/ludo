@@ -73,8 +73,8 @@ export function Dice({ value, canRoll, isMyTurn, onRoll }: DiceProps) {
   const [displayValue, setDisplayValue] = useState<number | null>(null);
   const [pendingValue, setPendingValue] = useState<number | null>(null);
   const [animationComplete, setAnimationComplete] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // When server value arrives, store it as pending
   useEffect(() => {

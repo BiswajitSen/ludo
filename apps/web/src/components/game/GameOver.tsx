@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { useGameStore } from '../../stores/gameStore';
-import { useAuthStore } from '../../stores/authStore';
 
 interface GameOverProps {
   onLeave: () => void;
