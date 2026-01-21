@@ -7,6 +7,14 @@ const __dirname = dirname(__filename);
 
 // Load .env from service directory
 dotenv.config({ path: join(__dirname, '..', '.env') });
+
+// Log startup info immediately
+console.log('=== Game Service Starting ===');
+console.log('Node version:', process.version);
+console.log('PORT:', process.env.PORT || '3001 (default)');
+console.log('REDIS_HOST:', process.env.REDIS_HOST || 'localhost (default)');
+console.log('CORS_ORIGIN:', process.env.CORS_ORIGIN || 'http://localhost:5173 (default)');
+
 import express from 'express';
 import { createServer } from 'http';
 import cors from 'cors';
@@ -46,8 +54,16 @@ async function bootstrap() {
 
   // Initialize Redis
   const redis = new RedisService();
-  await redis.connect();
-  logger.info('Redis connected');
+  try {
+    console.log('Connecting to Redis...');
+    await redis.connect();
+    console.log('Redis connected successfully');
+    logger.info('Redis connected');
+  } catch (redisError) {
+    console.error('Failed to connect to Redis:', redisError);
+    logger.error('Redis connection failed', redisError);
+    throw redisError;
+  }
 
   // Initialize Socket.IO
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
@@ -101,10 +117,10 @@ async function bootstrap() {
   // Graceful shutdown
   const shutdown = async () => {
     logger.info('Shutting down...');
-    
+
     io.close();
     await redis.disconnect();
-    
+
     httpServer.close(() => {
       logger.info('Server closed');
       process.exit(0);

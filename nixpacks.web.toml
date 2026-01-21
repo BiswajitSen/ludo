@@ -1,0 +1,12 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+cmds = ["npm install -g pnpm turbo"]
+
+[phases.install]
+cmds = ["pnpm install"]
+
+[phases.build]
+cmds = ["turbo run build --filter=@ludo/web"]
+
+[start]
+cmd = "cd apps/web && npx serve -s dist -l ${PORT:-3000}"

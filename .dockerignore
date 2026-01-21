@@ -1,0 +1,40 @@
+# Dependencies (will be installed in container)
+node_modules
+
+# Build outputs (will be built in container)
+dist
+.next
+coverage
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment files (should be set in Railway)
+.env
+.env.*
+!.env.example
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+__tests__
+
+# Documentation
+*.md
+docs
+
+# Misc
+.DS_Store
+Thumbs.db

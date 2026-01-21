@@ -7,6 +7,14 @@ const __dirname = dirname(__filename);
 
 // Load .env from service directory
 dotenv.config({ path: join(__dirname, '..', '.env') });
+
+// Log startup info immediately
+console.log('=== Auth Service Starting ===');
+console.log('Node version:', process.version);
+console.log('PORT:', process.env.AUTH_PORT || process.env.PORT || '3002 (default)');
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'NOT SET');
+console.log('CORS_ORIGIN:', process.env.CORS_ORIGIN || 'http://localhost:5173 (default)');
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -16,10 +24,22 @@ import { prisma } from '@ludo/database';
 import { authRouter } from './routes/auth.js';
 import { logger } from './utils/logger.js';
 
-const PORT = process.env.AUTH_PORT || 3002;
+const PORT = process.env.AUTH_PORT || process.env.PORT || 3002;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
 async function bootstrap() {
+  console.log('Starting auth service bootstrap...');
+
+  // Test database connection
+  try {
+    console.log('Testing database connection...');
+    await prisma.$connect();
+    console.log('Database connected successfully');
+  } catch (dbError) {
+    console.error('Database connection failed:', dbError);
+    throw dbError;
+  }
+
   const app = express();
 
   // Middleware

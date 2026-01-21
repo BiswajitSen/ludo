@@ -1,10 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import type {
-  ClientToServerEvents,
-  ServerToClientEvents,
-  GameState,
-  Room,
-} from '@ludo/types';
+import type { ClientToServerEvents, ServerToClientEvents, GameState, Room } from '@ludo/types';
 import { RedisService } from '../services/RedisService.js';
 import { RoomManager } from '../services/RoomManager.js';
 import { VoiceService } from '../services/VoiceService.js';
@@ -106,20 +101,14 @@ export class GameGateway {
     });
   }
 
-  private async handleCreateRoom(
-    socket: GameSocket,
-    data: { isPrivate?: boolean }
-  ): Promise<void> {
+  private async handleCreateRoom(socket: GameSocket, data: { isPrivate?: boolean }): Promise<void> {
     const user = socket.data.user;
     logger.info({ userId: user.id, isPrivate: data.isPrivate }, 'Creating room');
 
     try {
-      const room = await this.roomManager.createRoom(
-        user.id,
-        user.displayName,
-        user.avatarUrl,
-        { isPrivate: data.isPrivate ?? false }
-      );
+      const room = await this.roomManager.createRoom(user.id, user.displayName, user.avatarUrl, {
+        isPrivate: data.isPrivate ?? false,
+      });
 
       // Join Socket.IO room
       socket.join(room.id);
@@ -127,11 +116,7 @@ export class GameGateway {
       this.socketToRoom.set(socket.id, room.id);
 
       // Generate voice token
-      const voiceData = await this.voiceService.generateToken(
-        room.id,
-        user.id,
-        user.displayName
-      );
+      const voiceData = await this.voiceService.generateToken(room.id, user.id, user.displayName);
 
       // Generate reconnect token
       const rejoinToken = await this.redis.createReconnectToken(room.id, user.id);
@@ -139,6 +124,7 @@ export class GameGateway {
       // Send room data to creator
       socket.emit('room:joined', {
         room,
+        gameState: null,
         voiceToken: voiceData.token,
         voiceServerUrl: voiceData.wsUrl,
         rejoinToken,
@@ -195,7 +181,10 @@ export class GameGateway {
       // Check if this socket is already in this room (prevent duplicate joins)
       const existingRoomId = this.socketToRoom.get(socket.id);
       if (existingRoomId === actualRoomId) {
-        logger.info({ roomId: actualRoomId, userId: user.id }, 'Player already in room, skipping duplicate join');
+        logger.info(
+          { roomId: actualRoomId, userId: user.id },
+          'Player already in room, skipping duplicate join'
+        );
         return;
       }
 
@@ -228,8 +217,8 @@ export class GameGateway {
       });
 
       // Check if this is a truly new player (not a rejoin)
-      const isNewPlayer = room.players.filter(p => p.id === user.id).length === 1;
-      
+      const isNewPlayer = room.players.filter((p) => p.id === user.id).length === 1;
+
       // Only notify other players if this is a new player joining
       if (isNewPlayer) {
         socket.to(actualRoomId).emit('room:playerJoined', { player });
@@ -248,7 +237,7 @@ export class GameGateway {
 
   private async handleReconnection(socket: GameSocket, roomId: string): Promise<void> {
     const user = socket.data.user;
-    
+
     const room = await this.redis.getRoom(roomId);
     if (!room) {
       socket.emit('error', {
@@ -261,7 +250,7 @@ export class GameGateway {
 
     // Update player status
     await this.redis.updateRoomPlayer(roomId, user.id, {
-      status: 'connected' as any,
+      status: 'connected',
     });
 
     // Join socket room
@@ -281,11 +270,7 @@ export class GameGateway {
     }
 
     // Generate new tokens
-    const voiceData = await this.voiceService.generateToken(
-      roomId,
-      user.id,
-      user.displayName
-    );
+    const voiceData = await this.voiceService.generateToken(roomId, user.id, user.displayName);
     const rejoinToken = await this.redis.createReconnectToken(roomId, user.id);
 
     const updatedRoom = await this.redis.getRoom(roomId);
@@ -305,10 +290,7 @@ export class GameGateway {
     logger.info({ roomId, userId: user.id }, 'Player reconnected');
   }
 
-  private async handleLeaveRoom(
-    socket: GameSocket,
-    data: { roomId: string }
-  ): Promise<void> {
+  private async handleLeaveRoom(socket: GameSocket, data: { roomId: string }): Promise<void> {
     const user = socket.data.user;
 
     try {
@@ -353,16 +335,13 @@ export class GameGateway {
     });
   }
 
-  private async handleStartGame(
-    socket: GameSocket,
-    data: { roomId: string }
-  ): Promise<void> {
+  private async handleStartGame(socket: GameSocket, data: { roomId: string }): Promise<void> {
     const user = socket.data.user;
 
     // First validate and prepare the game (this creates the engine and stores it)
     // We need to set up listeners AFTER the engine is created but BEFORE startGame() is called
     // To do this, we'll use a two-step approach with a prepare method
-    
+
     const result = await this.roomManager.startGame(data.roomId, user.id);
 
     if ('error' in result) {
@@ -453,9 +432,12 @@ export class GameGateway {
 
   private setupGameEngineEvents(roomId: string, engine: any): void {
     logger.info({ roomId }, 'Setting up game engine events');
-    
+
     engine.on('turnStart', (data: any) => {
-      logger.info({ roomId, playerId: data.playerId, turnNumber: data.turnNumber }, 'Turn start event received');
+      logger.info(
+        { roomId, playerId: data.playerId, turnNumber: data.turnNumber },
+        'Turn start event received'
+      );
       this.io.to(roomId).emit('game:turnStart', {
         playerId: data.playerId,
         turnNumber: data.turnNumber,
@@ -506,7 +488,16 @@ export class GameGateway {
     }
 
     const result = engine.rollDice(user.id);
-    logger.info({ roomId: data.roomId, playerId: user.id, diceValue: result.value, validMoves: result.validMoves, success: result.success }, 'Dice rolled');
+    logger.info(
+      {
+        roomId: data.roomId,
+        playerId: user.id,
+        diceValue: result.value,
+        validMoves: result.validMoves,
+        success: result.success,
+      },
+      'Dice rolled'
+    );
 
     if (!result.success) {
       socket.emit('error', {
@@ -623,7 +614,7 @@ export class GameGateway {
       if (room.status === 'playing') {
         // Mark as disconnected, allow reconnection
         await this.redis.updateRoomPlayer(roomId, user.id, {
-          status: 'disconnected' as any,
+          status: 'disconnected',
         });
 
         const engine = this.roomManager.getGameEngine(roomId);
@@ -655,7 +646,7 @@ export class GameGateway {
       } else {
         // In waiting room - give a short grace period for reconnection (e.g., page navigation)
         const reconnectGrace = 10000; // 10 seconds for waiting room
-        
+
         setTimeout(async () => {
           // Check if player reconnected
           const currentSocketId = this.playerToSocket.get(user.id);
@@ -663,7 +654,7 @@ export class GameGateway {
             // Player reconnected, don't remove
             return;
           }
-          
+
           // Player didn't reconnect, remove from room
           await this.roomManager.leaveRoom(roomId, user.id);
           this.io.to(roomId).emit('room:playerLeft', {

@@ -105,6 +105,8 @@ export interface Room {
   gameServerId: string | null;
 }
 
+export type PlayerStatus = 'connected' | 'disconnected' | 'spectating';
+
 export interface RoomPlayer {
   id: string;
   displayName: string;
@@ -113,6 +115,7 @@ export interface RoomPlayer {
   isHost: boolean;
   isReady: boolean;
   joinedAt: number;
+  status?: PlayerStatus;
 }
 
 // ===========================================
@@ -130,11 +133,7 @@ export interface ClientToServerEvents {
 
   // Game events
   'game:roll': (data: { roomId: string; timestamp: number }) => void;
-  'game:move': (data: {
-    roomId: string;
-    tokenId: number;
-    moveSequence: number;
-  }) => void;
+  'game:move': (data: { roomId: string; tokenId: number; moveSequence: number }) => void;
 
   // Chat events
   'chat:message': (data: {
@@ -178,10 +177,7 @@ export interface ServerToClientEvents {
   'room:closed': (data: { reason: string }) => void;
 
   // Game events
-  'game:started': (data: {
-    gameId: string;
-    gameState: GameState;
-  }) => void;
+  'game:started': (data: { gameId: string; gameState: GameState }) => void;
   'game:turnStart': (data: {
     playerId: string;
     turnNumber: number;
@@ -204,19 +200,9 @@ export interface ServerToClientEvents {
     boardState: Player[];
     moveId: string;
   }) => void;
-  'game:turnTimeout': (data: {
-    playerId: string;
-    consecutiveTimeouts: number;
-  }) => void;
-  'game:turnWarning': (data: {
-    playerId: string;
-    remainingMs: number;
-  }) => void;
-  'game:ended': (data: {
-    winner: string;
-    rankings: PlayerRanking[];
-    matchId: string;
-  }) => void;
+  'game:turnTimeout': (data: { playerId: string; consecutiveTimeouts: number }) => void;
+  'game:turnWarning': (data: { playerId: string; remainingMs: number }) => void;
+  'game:ended': (data: { winner: string; rankings: PlayerRanking[]; matchId: string }) => void;
 
   // Chat events
   'chat:message': (data: {
@@ -256,6 +242,7 @@ export type GameErrorCode =
   | 'GAME_NOT_STARTED'
   | 'ROOM_FULL'
   | 'ROOM_NOT_FOUND'
+  | 'ROOM_CREATE_FAILED'
   | 'RATE_LIMITED'
   | 'INVALID_STATE'
   | 'RECONNECT_EXPIRED'

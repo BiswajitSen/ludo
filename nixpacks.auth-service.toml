@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+cmds = ["npm install -g pnpm turbo"]
+
+[phases.install]
+cmds = ["pnpm install"]
+
+[phases.build]
+cmds = [
+  "pnpm --filter @ludo/database exec prisma generate || true",
+  "turbo run build --filter=@ludo/auth-service"
+]
+
+[start]
+cmd = "cd services/auth-service && node dist/index.js"

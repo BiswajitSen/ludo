@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
+import type { Router as RouterType } from 'express';
 import { z } from 'zod';
 import { prisma } from '@ludo/database';
 import { authMiddleware } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
 
-export const roomRouter = Router();
+export const roomRouter: RouterType = Router();
 
 // Request validation schemas
 const createRoomSchema = z.object({
@@ -25,7 +26,7 @@ const authenticate = async (req: Request, res: Response, next: Function) => {
 
   const token = authHeader.slice(7);
   const user = await authMiddleware.verifyToken(token);
-  
+
   if (!user) {
     return res.status(401).json({ error: 'Invalid token' });
   }
@@ -42,7 +43,7 @@ roomRouter.post('/', authenticate, async (req: Request, res: Response) => {
 
     // Room creation is handled via WebSocket, this is just for REST API alternative
     // In production, you'd call RoomManager here
-    
+
     res.json({
       success: true,
       data: {
@@ -51,9 +52,9 @@ roomRouter.post('/', authenticate, async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: 'Validation failed', 
-        details: error.errors 
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: error.errors,
       });
     }
     logger.error({ error }, 'Failed to create room');
@@ -92,9 +93,9 @@ roomRouter.post('/join', authenticate, async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: 'Validation failed', 
-        details: error.errors 
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: error.errors,
       });
     }
     logger.error({ error }, 'Failed to join room');

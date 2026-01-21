@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import type { Router as RouterType } from 'express';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import { createHash } from 'crypto';
@@ -8,7 +9,7 @@ import { prisma } from '@ludo/database';
 import type { JwtPayload, AuthTokens } from '@ludo/types';
 import { logger } from '../utils/logger.js';
 
-export const authRouter = Router();
+export const authRouter: RouterType = Router();
 
 const ACCESS_TOKEN_EXPIRY = 900; // 15 minutes
 const REFRESH_TOKEN_EXPIRY = 604800; // 7 days
