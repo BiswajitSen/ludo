@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// Users & Authentication
+// ==========================================
+
+model User {
+  id           String   @id @default(uuid())
+  email        String?  @unique
+  displayName  String   @map("display_name")
+  avatarUrl    String?  @map("avatar_url")
+  authProvider String   @map("auth_provider") // 'guest', 'google'
+  providerId   String?  @map("provider_id")
+  isGuest      Boolean  @default(false) @map("is_guest")
+  createdAt    DateTime @default(now()) @map("created_at")
+  lastSeenAt   DateTime @default(now()) @map("last_seen_at")
+
+  sessions          UserSession[]
+  stats             PlayerStats?
+  matchParticipants MatchParticipant[]
+  sentFriendships   Friendship[]       @relation("SentFriendships")
+  receivedFriendships Friendship[]     @relation("ReceivedFriendships")
+
+  @@unique([authProvider, providerId])
+  @@index([email])
+  @@map("users")
+}
+
+model UserSession {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  refreshTokenHash String    @map("refresh_token_hash")
+  deviceInfo       Json?     @map("device_info")
+  ipAddress        String?   @map("ip_address")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  expiresAt        DateTime  @map("expires_at")
+  revokedAt        DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshTokenHash])
+  @@map("user_sessions")
+}
+
+// ==========================================
+// Player Statistics
+// ==========================================
+
+model PlayerStats {
+  userId          String   @id @map("user_id")
+  gamesPlayed     Int      @default(0) @map("games_played")
+  gamesWon        Int      @default(0) @map("games_won")
+  gamesLost       Int      @default(0) @map("games_lost")
+  gamesAbandoned  Int      @default(0) @map("games_abandoned")
+  tokensCaptured  Int      @default(0) @map("tokens_captured")
+  tokensLost      Int      @default(0) @map("tokens_lost")
+  totalMoves      Int      @default(0) @map("total_moves")
+  sixesRolled     Int      @default(0) @map("sixes_rolled")
+  winStreak       Int      @default(0) @map("win_streak")
+  bestWinStreak   Int      @default(0) @map("best_win_streak")
+  skillRating     Int      @default(1000) @map("skill_rating")
+  ratingDeviation Int      @default(350) @map("rating_deviation")
+  lastRatingUpdate DateTime? @map("last_rating_update")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("player_stats")
+}
+
+// ==========================================
+// Matches
+// ==========================================
+
+model Match {
+  id          String   @id @default(uuid())
+  roomId      String   @map("room_id")
+  startedAt   DateTime @map("started_at")
+  endedAt     DateTime @map("ended_at")
+  playerCount Int      @map("player_count")
+  winnerId    String?  @map("winner_id")
+  endReason   String   @map("end_reason") // 'completed', 'forfeit', 'timeout'
+  gameMode    String   @map("game_mode") // 'ranked', 'casual', 'private'
+
+  participants MatchParticipant[]
+  moves        MatchMove[]
+
+  @@index([endedAt(sort: Desc)])
+  @@index([winnerId])
+  @@map("matches")
+}
+
+model MatchParticipant {
+  id             String   @id @default(uuid())
+  matchId        String   @map("match_id")
+  userId         String   @map("user_id")
+  color          String
+  finishPosition Int?     @map("finish_position")
+  tokensHome     Int      @default(0) @map("tokens_home")
+  tokensCaptured Int      @default(0) @map("tokens_captured")
+  tokensLost     Int      @default(0) @map("tokens_lost")
+  movesMade      Int      @default(0) @map("moves_made")
+  ratingBefore   Int?     @map("rating_before")
+  ratingAfter    Int?     @map("rating_after")
+  abandoned      Boolean  @default(false)
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([matchId, userId])
+  @@unique([matchId, color])
+  @@index([userId])
+  @@map("match_participants")
+}
+
+model MatchMove {
+  id           BigInt   @id @default(autoincrement())
+  matchId      String   @map("match_id")
+  userId       String   @map("user_id")
+  moveNumber   Int      @map("move_number")
+  diceValue    Int      @map("dice_value")
+  tokenId      Int      @map("token_id")
+  fromPosition Int      @map("from_position")
+  toPosition   Int      @map("to_position")
+  capturedToken Boolean @default(false) @map("captured_token")
+  timestamp    DateTime @default(now())
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, moveNumber])
+  @@index([matchId])
+  @@map("match_moves")
+}
+
+// ==========================================
+// Social
+// ==========================================
+
+model Friendship {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  friendId  String   @map("friend_id")
+  status    String   @default("pending") // 'pending', 'accepted', 'blocked'
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User @relation("SentFriendships", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("ReceivedFriendships", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@index([userId, status])
+  @@index([friendId, status])
+  @@map("friendships")
+}

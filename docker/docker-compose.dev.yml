@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ludo-postgres
+    environment:
+      POSTGRES_USER: ludo
+      POSTGRES_PASSWORD: ludo_password
+      POSTGRES_DB: ludo_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ludo -d ludo_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: ludo-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # LiveKit (Voice Server)
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: ludo-livekit
+    command: --config /livekit.yaml
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    volumes:
+      - ./livekit.yaml:/livekit.yaml
+    environment:
+      LIVEKIT_KEYS: "devkey: secret"
+
+volumes:
+  postgres_data:
+  redis_data:

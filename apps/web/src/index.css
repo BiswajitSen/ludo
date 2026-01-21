@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-red: #e53935;
+  --color-blue: #1e88e5;
+  --color-green: #43a047;
+  --color-yellow: #fdd835;
+}
+
+body {
+  @apply bg-ludo-dark text-white min-h-screen;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+/* Ludo board cell styles */
+.ludo-cell {
+  @apply w-8 h-8 border border-gray-300 flex items-center justify-center;
+}
+
+.ludo-cell-red {
+  @apply bg-ludo-red/20;
+}
+
+.ludo-cell-blue {
+  @apply bg-ludo-blue/20;
+}
+
+.ludo-cell-green {
+  @apply bg-ludo-green/20;
+}
+
+.ludo-cell-yellow {
+  @apply bg-ludo-yellow/20;
+}
+
+.ludo-cell-safe {
+  @apply bg-gray-200;
+}
+
+/* Token styles */
+.token {
+  @apply w-6 h-6 rounded-full shadow-lg cursor-pointer transition-all duration-200;
+}
+
+.token:hover {
+  @apply scale-110;
+}
+
+.token-red {
+  @apply bg-ludo-red border-2 border-red-800;
+}
+
+.token-blue {
+  @apply bg-ludo-blue border-2 border-blue-800;
+}
+
+.token-green {
+  @apply bg-ludo-green border-2 border-green-800;
+}
+
+.token-yellow {
+  @apply bg-ludo-yellow border-2 border-yellow-600;
+}
+
+.token-movable {
+  @apply animate-pulse-fast ring-2 ring-white ring-offset-2;
+}
+
+/* Dice styles */
+.dice {
+  @apply w-16 h-16 bg-white rounded-xl shadow-xl flex items-center justify-center;
+  @apply text-3xl font-bold text-gray-800;
+}
+
+.dice-rolling {
+  @apply animate-spin-dice;
+}
+
+/* Button styles */
+.btn {
+  @apply px-6 py-3 rounded-lg font-semibold transition-all duration-200;
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-purple-600 to-blue-600 text-white;
+  @apply hover:from-purple-700 hover:to-blue-700;
+  @apply focus:ring-purple-500;
+}
+
+.btn-secondary {
+  @apply bg-gray-700 text-white hover:bg-gray-600;
+  @apply focus:ring-gray-500;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700;
+  @apply focus:ring-red-500;
+}
+
+/* Card styles */
+.card {
+  @apply bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6;
+  @apply border border-gray-700/50;
+}
+
+/* Input styles */
+.input {
+  @apply w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700;
+  @apply text-white placeholder-gray-500;
+  @apply focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile touch improvements */
+@media (max-width: 768px) {
+  .btn {
+    @apply px-4 py-2.5 text-sm;
+  }
+  
+  .card {
+    @apply p-4 rounded-xl;
+  }
+  
+  .input {
+    @apply px-3 py-2.5 text-sm;
+  }
+}

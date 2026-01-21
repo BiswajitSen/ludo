@@ -1,0 +1,30 @@
+{
+  "name": "@ludo/database",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "generate": "prisma generate",
+    "push": "prisma db push",
+    "migrate": "prisma migrate dev",
+    "studio": "prisma studio",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.9.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.9.0",
+    "typescript": "^5.3.3"
+  }
+}

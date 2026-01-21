@@ -1,0 +1,59 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+# Copy package files
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
+COPY packages/types/package.json ./packages/types/
+COPY packages/game-engine/package.json ./packages/game-engine/
+COPY packages/database/package.json ./packages/database/
+COPY services/game-service/package.json ./services/game-service/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source files
+COPY packages/types ./packages/types
+COPY packages/game-engine ./packages/game-engine
+COPY packages/database ./packages/database
+COPY services/game-service ./services/game-service
+COPY tsconfig.base.json ./
+
+# Build packages
+RUN pnpm --filter @ludo/types build
+RUN pnpm --filter @ludo/game-engine build
+RUN pnpm --filter @ludo/database generate
+RUN pnpm --filter @ludo/game-service build
+
+# Production stage
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+# Copy built files
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --from=builder /app/packages/types/package.json ./packages/types/
+COPY --from=builder /app/packages/game-engine/dist ./packages/game-engine/dist
+COPY --from=builder /app/packages/game-engine/package.json ./packages/game-engine/
+COPY --from=builder /app/packages/database/dist ./packages/database/dist
+COPY --from=builder /app/packages/database/package.json ./packages/database/
+COPY --from=builder /app/packages/database/node_modules ./packages/database/node_modules
+COPY --from=builder /app/services/game-service/dist ./services/game-service/dist
+COPY --from=builder /app/services/game-service/package.json ./services/game-service/
+COPY --from=builder /app/services/game-service/node_modules ./services/game-service/node_modules
+
+# Set environment
+ENV NODE_ENV=production
+
+EXPOSE 3001
+
+CMD ["node", "services/game-service/dist/index.js"]

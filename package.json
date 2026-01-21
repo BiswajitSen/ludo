@@ -1,0 +1,68 @@
+{
+  "name": "ludo-multiplayer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-grade multiplayer Ludo game with real-time voice chat",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "./scripts/dev.sh start",
+    "dev:stop": "./scripts/dev.sh stop",
+    "dev:restart": "./scripts/dev.sh restart",
+    "dev:status": "./scripts/dev.sh status",
+    "dev:logs": "./scripts/dev.sh logs",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "test:coverage": "turbo run test:coverage",
+    "test:game": "pnpm --filter @ludo/game-engine test",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "prepare": "husky",
+    "db:generate": "pnpm --filter @ludo/database generate",
+    "db:push": "DATABASE_URL=postgresql://ludo:ludo_password@localhost:5433/ludo_db?schema=public pnpm --filter @ludo/database push",
+    "db:migrate": "pnpm --filter @ludo/database migrate",
+    "db:studio": "DATABASE_URL=postgresql://ludo:ludo_password@localhost:5433/ludo_db?schema=public pnpm --filter @ludo/database studio",
+    "docker:dev": "docker-compose -f docker/docker-compose.dev.yml up -d",
+    "docker:down": "docker-compose -f docker/docker-compose.dev.yml down",
+    "deploy": "./scripts/deploy.sh docker",
+    "deploy:k8s": "./scripts/deploy.sh k8s",
+    "deploy:build": "docker-compose -f docker/docker-compose.prod.yml build",
+    "deploy:up": "docker-compose -f docker/docker-compose.prod.yml up -d",
+    "deploy:down": "docker-compose -f docker/docker-compose.prod.yml down",
+    "deploy:logs": "docker-compose -f docker/docker-compose.prod.yml logs -f"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^20.11.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.53.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild": "0.21.5"
+    }
+  }
+}
